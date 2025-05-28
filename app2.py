@@ -41,10 +41,10 @@ etiquetas_parejas = {
 }
 
 explicaciones_parejas = {
-    "% población bajo línea de pobreza vs Ingreso promedio":
+    "Tasa de pobreza (headcount) vs Ingreso promedio":
         "Evalúa si los países con mayor ingreso promedio tienen menor pobreza. A mayor ingreso medio, se espera una menor proporción de personas bajo la línea de pobreza.",
 
-    "% población bajo línea de pobreza vs Ingreso mediano":
+    "Tasa de pobreza (headcount) vs Ingreso mediano":
         "Analiza si la mediana del ingreso, que representa mejor al individuo típico, se asocia con menores niveles de pobreza.",
 
     "Índice de Gini vs % población bajo línea de pobreza":
@@ -53,7 +53,7 @@ explicaciones_parejas = {
     "Índice de Gini vs Brecha de pobreza":
         "Relaciona la desigualdad con la profundidad de la pobreza: más desigualdad puede llevar a una mayor brecha para superar la pobreza.",
 
-    "Índice de desigualdad de Theil vs % población bajo línea de pobreza":
+    "Desviación Logarítmica Media vs Tasa de pobreza (headcount)":
         "Evalúa si la desigualdad con mayor peso en los más pobres se asocia con un mayor porcentaje de personas pobres.",
 
     "Ingreso medio vs Índice de Gini":
