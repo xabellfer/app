@@ -47,7 +47,7 @@ explicaciones_parejas = {
     "Tasa de pobreza (headcount) vs Ingreso mediano":
         "Analiza si la mediana del ingreso, que representa mejor al individuo típico, se asocia con menores niveles de pobreza.",
 
-    "Índice de Gini vs % población bajo línea de pobreza":
+    "Índice de Gini vs Tasa de pobreza (headcount)":
         "Explora cómo la desigualdad en la distribución del ingreso influye en la proporción de personas pobres en una población.",
 
     "Índice de Gini vs Brecha de pobreza":
@@ -56,7 +56,7 @@ explicaciones_parejas = {
     "Desviación Logarítmica Media vs Tasa de pobreza (headcount)":
         "Evalúa si la desigualdad con mayor peso en los más pobres se asocia con un mayor porcentaje de personas pobres.",
 
-    "Ingreso medio vs Índice de Gini":
+    "Ingreso promedio vs Índice de Gini":
         "Explora si el crecimiento económico (ingreso medio) se asocia con menor o mayor desigualdad.",
 
     "Ingreso mediano vs Índice de Gini":
