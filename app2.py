@@ -193,7 +193,7 @@ with tabs[2]:
             cmap='coolwarm',
             xticklabels=[traducciones[v] for v in corr_matrix.columns],
             yticklabels=[traducciones[v] for v in corr_matrix.index],
-            annot_kws={"size": 8},     # Tamaño del texto dentro de las celdas
+            annot_kws={"size": 4},     # Tamaño del texto dentro de las celdas
             cbar_kws={"shrink": 0.8},  # Reduce el tamaño de la barra de color
             ax=ax
         )
