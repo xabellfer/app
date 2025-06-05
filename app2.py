@@ -173,10 +173,25 @@ with tabs[1]:
 
 with tabs[2]:
     st.subheader("Relación entre variables")
-    relacion_trad = st.selectbox("Relación", list(etiquetas_parejas.keys()))
-    x_var, y_var = etiquetas_parejas[relacion_trad]
-    st.pyplot(graficar_relacion_variables_seleccion(x_var, y_var))
-    st.markdown(f"**Explicación:** {explicaciones_parejas.get(relacion_trad, '')}")
+    sub_tabs = st.tabs(["Gráfica de dispersión", "Matriz de correlación"])
+
+    with sub_tabs[0]:
+        relacion_trad = st.selectbox("Relación", list(etiquetas_parejas.keys()))
+        x_var, y_var = etiquetas_parejas[relacion_trad]
+        st.pyplot(graficar_relacion_variables_seleccion(x_var, y_var))
+        st.markdown(f"**Explicación:** {explicaciones_parejas.get(relacion_trad, '')}")
+
+    with sub_tabs[1]:
+        st.markdown("### Matriz de correlación")
+        corr_vars = df_national[variables].dropna()
+        corr_matrix = corr_vars.corr()
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm',
+                    xticklabels=[traducciones[v] for v in corr_matrix.columns],
+                    yticklabels=[traducciones[v] for v in corr_matrix.index],
+                    ax=ax)
+        st.pyplot(fig)
+
 
 with tabs[3]:
     st.subheader("Mapa mundial por variable")
