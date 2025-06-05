@@ -185,7 +185,7 @@ with tabs[2]:
         st.markdown("### Matriz de correlación")
         corr_vars = df_national[variables].dropna()
         corr_matrix = corr_vars.corr()
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(8, 6))
         sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm',
                     xticklabels=[traducciones[v] for v in corr_matrix.columns],
                     yticklabels=[traducciones[v] for v in corr_matrix.index],
