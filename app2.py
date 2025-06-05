@@ -185,12 +185,22 @@ with tabs[2]:
         st.markdown("### Matriz de correlación")
         corr_vars = df_national[variables].dropna()
         corr_matrix = corr_vars.corr()
-        fig, ax = plt.subplots(figsize=(8, 4))
-        sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm',
-                    xticklabels=[traducciones[v] for v in corr_matrix.columns],
-                    yticklabels=[traducciones[v] for v in corr_matrix.index],
-                    ax=ax)
+        fig, ax = plt.subplots(figsize=(8, 5))  # Más pequeño
+        sns.heatmap(
+            corr_matrix,
+            annot=True,
+            fmt=".2f",
+            cmap='coolwarm',
+            xticklabels=[traducciones[v] for v in corr_matrix.columns],
+            yticklabels=[traducciones[v] for v in corr_matrix.index],
+            annot_kws={"size": 8},     # Tamaño del texto dentro de las celdas
+            cbar_kws={"shrink": 0.8},  # Reduce el tamaño de la barra de color
+            ax=ax
+        )
+        ax.tick_params(axis='x', labelrotation=45, labelsize=8)
+        ax.tick_params(axis='y', labelsize=8)
         st.pyplot(fig)
+
 
 
 with tabs[3]:
