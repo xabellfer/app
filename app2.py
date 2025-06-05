@@ -197,8 +197,8 @@ with tabs[2]:
             cbar_kws={"shrink": 0.8},  # Reduce el tamaño de la barra de color
             ax=ax
         )
-        ax.tick_params(axis='x', labelrotation=30, labelsize=8)
-        ax.tick_params(axis='y', labelsize=8)
+        ax.tick_params(axis='x', labelrotation=20, labelsize=4)
+        ax.tick_params(axis='y', labelsize=4)
         st.pyplot(fig)
 
 
