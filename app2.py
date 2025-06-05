@@ -185,7 +185,7 @@ with tabs[2]:
         st.markdown("### Matriz de correlación")
         corr_vars = df_national[variables].dropna()
         corr_matrix = corr_vars.corr()
-        fig, ax = plt.subplots(figsize=(6, 4))  # Más pequeño
+        fig, ax = plt.subplots(figsize=(4, 3))  # Más pequeño
         sns.heatmap(
             corr_matrix,
             annot=True,
@@ -194,7 +194,7 @@ with tabs[2]:
             xticklabels=[traducciones[v] for v in corr_matrix.columns],
             yticklabels=[traducciones[v] for v in corr_matrix.index],
             annot_kws={"size": 4},     # Tamaño del texto dentro de las celdas
-            cbar_kws={"shrink": 0.8},  # Reduce el tamaño de la barra de color
+            cbar_kws={"shrink": 0.4},  # Reduce el tamaño de la barra de color
             ax=ax
         )
         ax.tick_params(axis='x', labelrotation=20, labelsize=4)
