@@ -57,6 +57,8 @@ explicaciones_parejas = {
 }
 
 # --- NUEVA PESTAÑA: RESUMEN VISUAL GLOBAL ---
+... # todo el código igual hasta dentro de la función resumen_visual()
+
 def resumen_visual(año, variable):
     df_filtrado = df[df['reporting_year'] == año].copy()
 
@@ -65,6 +67,7 @@ def resumen_visual(año, variable):
     df_filtrado = df_filtrado[df_filtrado['reporting_level'] == df_filtrado['dominante']]
 
     df_var = df_filtrado[["country_name", "region_name", variable]].dropna()
+    df_var = df_var[df_var[variable] > 0]  # Filtrar solo valores mayores que cero
 
     # Treemap por región
     df_region = df_var.groupby("region_name").agg({
@@ -84,10 +87,10 @@ def resumen_visual(año, variable):
     )
     fig_treemap.update_layout(title=f"Relación {traducciones[variable]}/Desigualdad")
 
-    # Barplot por país
-    top_paises = df_var.sort_values(by=variable, ascending=False).head(15)
+    # Barplot por país (todos los países con valor > 0)
+    df_var_sorted = df_var.sort_values(by=variable, ascending=False)
     fig_bar = px.bar(
-        top_paises,
+        df_var_sorted,
         x=variable,
         y="country_name",
         orientation="h",
@@ -101,6 +104,7 @@ def resumen_visual(año, variable):
     )
 
     return fig_treemap, fig_bar
+
 
 # --- Gráficos interactivos con Plotly ---
 def plot_box_hist_violin(df_base, variable, tipo):
