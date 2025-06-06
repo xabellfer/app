@@ -23,182 +23,213 @@ traducciones = {
 
 }
 traducciones_inv = {v: k for k, v in traducciones.items()}
-años = ["Todos los años"] + sorted(df['reporting_year'].dropna().unique().astype(int))
+años = [str(año) for año in sorted(df['reporting_year'].dropna().unique().astype(int))] # Convertir a string para el selectbox
+años.insert(0, "Todos los años") # Añadir "Todos los años" al principio
 variables = [v for v in traducciones if v in df.columns]
 variables_traducidas = [traducciones[v] for v in variables]
 regiones = sorted(df['region_name'].unique())
 paises = sorted(df['country_name'].unique())
-indicadores = [v for v in ['headcount', 'poverty_gap', 'poverty_severity', 'watts', 'gini', 'mean'] if v in df.columns]
-indicadores_traducidos = [traducciones[v] for v in indicadores]
+indicadores = [v for v in ['headcount', 'poverty_gap', 'poverty_severity', 'watts',
+                           'mean', 'median', 'mld', 'gini', 'reporting_gdp'] if v in df.columns] # Asegurarse de que estén en df.columns
 
-parejas_variables = [
-    ("headcount", "mean"), ("headcount", "median"), ("gini", "headcount"),
-    ("gini", "poverty_gap"), ("mld", "headcount"), ("mean", "gini"),
-    ("median", "gini"),
-]
 etiquetas_parejas = {
-    f"{traducciones[x]} vs {traducciones[y]}": (x, y) for x, y in parejas_variables
+    "Tasa de pobreza vs. Ingreso promedio": ("headcount", "mean"),
+    "Tasa de pobreza vs. Desviación Logarítmica Media": ("headcount", "mld"),
+    "Ingreso promedio vs. PIB per cápita": ("mean", "reporting_gdp"),
+    "Índice de Gini vs. Ingreso promedio": ("gini", "mean")
 }
 
 explicaciones_parejas = {
-    "Tasa de pobreza (headcount) vs Ingreso promedio":
-        "Evalúa si los países con mayor ingreso promedio tienen menor pobreza. A mayor ingreso medio, se espera una menor proporción de personas bajo la línea de pobreza.",
-
-    "Tasa de pobreza (headcount) vs Ingreso mediano":
-        "Analiza si la mediana del ingreso, que representa mejor al individuo típico, se asocia con menores niveles de pobreza.",
-
-    "Índice de Gini vs Tasa de pobreza (headcount)":
-        "Explora cómo la desigualdad en la distribución del ingreso influye en la proporción de personas pobres en una población.",
-
-    "Índice de Gini vs Brecha de pobreza":
-        "Relaciona la desigualdad con la profundidad de la pobreza: más desigualdad puede llevar a una mayor brecha para superar la pobreza.",
-
-    "Desviación Logarítmica Media vs Tasa de pobreza (headcount)":
-        "Evalúa si la desigualdad con mayor peso en los más pobres se asocia con un mayor porcentaje de personas pobres.",
-
-    "Ingreso promedio vs Índice de Gini":
-        "Explora si el crecimiento económico (ingreso medio) se asocia con menor o mayor desigualdad.",
-
-    "Ingreso mediano vs Índice de Gini":
-        "Evalúa si el ingreso del ciudadano promedio se ve afectado por la concentración de riqueza en los extremos.",
-
+    "Tasa de pobreza vs. Ingreso promedio": "Esta gráfica muestra la relación entre la tasa de pobreza y el ingreso promedio. Generalmente, a mayor ingreso promedio, menor es la tasa de pobreza.",
+    "Tasa de pobreza vs. Desviación Logarítmica Media": "Aquí se observa la relación entre la tasa de pobreza y la desigualdad de ingresos (medida por la Desviación Logarítmica Media). Usualmente, una mayor desigualdad se asocia con mayores tasas de pobreza.",
+    "Ingreso promedio vs. PIB per cápita": "Esta gráfica explora la relación entre el ingreso promedio de los hogares y el Producto Interno Bruto (PIB) per cápita del país, indicadores clave del desarrollo económico.",
+    "Índice de Gini vs. Ingreso promedio": "Muestra cómo el índice de Gini (medida de desigualdad) se relaciona con el ingreso promedio. Puede haber países con alto ingreso promedio pero también alta desigualdad."
 }
 
 
-# --- Funciones para gráficas ---
-def violin_plot(df_base, variable, variable_trad):
-    fig, ax = plt.subplots(figsize=(12, 5))
-    sns.violinplot(y=df_base[variable], ax=ax, inner='quartile', color='skyblue')
-    ax.set_title(f"Diagrama de Violín de {variable_trad}")
-    ax.set_ylabel(variable_trad)
-    ax.set_xlabel("")
-    return fig
+# --- Funciones de graficado ---
+def graficar_region(region, indicador):
+    df_filtered = df_national[(df_national['region_name'] == region) & (df_national['reporting_level'] == 'national')]
+    if df_filtered.empty:
+        st.warning(f"No hay datos para la región '{region}' y el indicador '{traducciones.get(indicador, indicador)}' a nivel nacional.")
+        return None
 
-def box_plot(df_base, variable, variable_trad):
-    fig, ax = plt.subplots(figsize=(12, 5))
-    sns.boxplot(y=df_base[variable], ax=ax, color='lightgreen')
-    ax.set_title(f"Boxplot de {variable_trad}")
-    ax.set_ylabel(variable_trad)
-    return fig
-
-def histograma(df_base, variable, variable_trad):
-    fig, ax = plt.subplots(figsize=(12, 5))
-    sns.histplot(df_base[variable].dropna(), kde=False, bins=30, color='skyblue', ax=ax)
-    ax.set_title(f"Histograma de {variable_trad}")
-    ax.set_xlabel(variable_trad)
-    ax.set_ylabel("Frecuencia")
+    fig = px.line(df_filtered,
+                  x='reporting_year',
+                  y=indicador,
+                  color='country_name',
+                  title=f'{traducciones.get(indicador, indicador)} en {region} por país',
+                  labels={'reporting_year': 'Año', indicador: traducciones.get(indicador, indicador), 'country_name': 'País'})
+    fig.update_layout(hovermode="x unified")
     return fig
 
 def evolucion_pais(pais, indicador):
-    df_pais = df[df['country_name'] == pais]
+    df_pais = df_national[df_national['country_name'] == pais]
     if df_pais.empty:
-        return None, pd.DataFrame()
-    reporting_level = df_pais['reporting_level'].mode()[0]
-    df_pais = df_pais[df_pais['reporting_level'] == reporting_level]
-    df_pais = df_pais.sort_values('reporting_year')
-    df_filtrado = df_pais[['reporting_year', indicador]].dropna()
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(df_filtrado['reporting_year'], df_filtrado[indicador], marker='o', color='blue')
-    ax.set_title(f"Evolución de {traducciones[indicador]} en {pais} a nivel '{reporting_level}'")
-    ax.set_xlabel("Año")
-    ax.set_ylabel(traducciones[indicador])
-    return fig, df_filtrado.rename(columns={'reporting_year': 'Año', indicador: 'Valor'})
+        st.warning(f"No hay datos para el país '{pais}'.")
+        return None, None
+
+    # Filtrar por el reporting_level más frecuente para el país
+    # Agrupar por año y reporting_level, contar las ocurrencias, luego encontrar el más frecuente por país
+    # Esto es una simplificación; en un caso real se necesitaría una lógica más robusta si el reporting_level varía mucho
+    
+    # Encontrar el reporting_level más frecuente en general para ese país
+    most_freq_level = df_pais['reporting_level'].mode()[0]
+    df_pais_filtered = df_pais[df_pais['reporting_level'] == most_freq_level]
+
+    if df_pais_filtered.empty:
+        st.warning(f"No hay datos para el país '{pais}' con el nivel de reporte más frecuente '{most_freq_level}'.")
+        return None, None
+
+    fig = px.line(df_pais_filtered,
+                  x='reporting_year',
+                  y=indicador,
+                  title=f'Evolución de {traducciones.get(indicador, indicador)} en {pais}',
+                  labels={'reporting_year': 'Año', indicador: traducciones.get(indicador, indicador)})
+    fig.update_layout(hovermode="x unified")
+    return fig, df_pais_filtered[['reporting_year', indicador]].set_index('reporting_year')
 
 def graficar_relacion_variables_seleccion(x_var, y_var):
-    df_plot = df_national[[x_var, y_var, 'region_name']].dropna()
-    fig, ax = plt.subplots(figsize=(12, 5))
-    sns.scatterplot(data=df_plot, x=x_var, y=y_var, hue='region_name', palette='Set2', ax=ax)
-    ax.set_title(f"{traducciones[x_var]} vs {traducciones[y_var]}")
-    ax.set_xlabel(traducciones[x_var])
-    ax.set_ylabel(traducciones[y_var])
+    df_plot = df_national.dropna(subset=[x_var, y_var])
+    fig = px.scatter(df_plot,
+                     x=x_var,
+                     y=y_var,
+                     color='region_name',
+                     hover_name='country_name',
+                     title=f'Relación entre {traducciones.get(x_var, x_var)} y {traducciones.get(y_var, y_var)}',
+                     labels={x_var: traducciones.get(x_var, x_var), y_var: traducciones.get(y_var, y_var)})
+    fig.update_layout(hovermode="closest")
     return fig
 
-def crear_mapa_mundial(variable, año):
-    df_filtrado = df[
-        (df['reporting_level'] == 'national') &
-        (df['reporting_year'] == int(año)) &
-        (df[variable].notna())
-    ][['country_name', variable]]
-
-    fig = px.choropleth(
-        df_filtrado,
-        locations='country_name',
-        locationmode='country names',
-        color=variable,
-        hover_name='country_name',
-        color_continuous_scale='Reds',
-        title=f'{traducciones[variable]} en {año}',
-        labels={variable: traducciones[variable]}
-    )
-
-    # Ajuste del tamaño del mapa
-    fig.update_layout(
-        margin={"r": 0, "t": 50, "l": 0, "b": 0},
-        height=700  # <--- MÁS ALTO
-    )
-
+def graficar_comparativa_anual(df_data, variable_seleccionada, titulo):
+    fig = px.scatter(df_data,
+                     x='country_name',
+                     y=variable_seleccionada,
+                     color='region_name',
+                     hover_name='country_name',
+                     title=titulo,
+                     labels={'country_name': 'País', variable_seleccionada: traducciones.get(variable_seleccionada, variable_seleccionada), 'region_name': 'Región'})
+    fig.update_layout(xaxis_tickangle=-45) # Inclinar las etiquetas del eje x para mejor legibilidad
     return fig
 
 
-# --- Interfaz Streamlit ---
-st.set_page_config(layout="wide", page_title="Análisis de Pobreza Global")
-st.title("🌍 Análisis de Pobreza Global")
+# --- Configuración de la aplicación Streamlit ---
+st.set_page_config(layout="wide", page_title="Análisis de Pobreza e Ingresos")
+st.title("Análisis de Pobreza e Ingresos Globales")
 
-tabs = st.tabs(["📊 Gráficos por Año", "📈 Evolución por País", "🔗 Relaciones", "🗺️ Mapa Mundial"])
+tabs = st.tabs(["Información General", "Evolución por País", "Comparativa por Año y Variable", "Relación entre variables", "Mapa mundial por indicador"])
 
 with tabs[0]:
-    st.subheader("Visualización por Año y Variable")
-    col1, col2, col3 = st.columns(3)
-    tipo = col1.selectbox("Tipo de gráfico", ["Boxplot", "Histograma", "Gráfico de Violín"])
-    año = col2.selectbox("Año", años)
-    variable_trad = col3.selectbox("Variable", variables_traducidas)
-    variable = traducciones_inv[variable_trad]
-    df_base = df if año == "Todos los años" else df[df['reporting_year'] == int(año)]
-    if tipo == "Boxplot":
-        st.pyplot(box_plot(df_base, variable, variable_trad))
-    elif tipo == "Histograma":
-        st.pyplot(histograma(df_base, variable, variable_trad))
-    else:
-        st.pyplot(violin_plot(df_base, variable, variable_trad))
+    st.header("Información General del Dataset")
+    st.write("Este dashboard presenta datos de pobreza e ingresos a nivel nacional y subnacional.")
+    st.write(f"Número total de registros: {len(df)}")
+    st.write(f"Columnas disponibles: {', '.join(df.columns.tolist())}")
+
+    st.subheader("Primeras filas del dataset (nivel nacional)")
+    st.dataframe(df_national.head())
 
 with tabs[1]:
-    st.subheader("Evolución temporal por país")
-    pais = st.selectbox("País", paises)
-    indicador_trad = st.selectbox("Indicador", indicadores_traducidos)
-    indicador = traducciones_inv[indicador_trad]
-    fig, tabla = evolucion_pais(pais, indicador)
+    st.subheader("Evolución de Indicadores por País")
+    pais_seleccionado = st.selectbox("Selecciona un País", paises)
+    indicador_seleccionado_pais = st.selectbox("Selecciona un Indicador", variables_traducidas, key='pais_indicador')
+    indicador_seleccionado_pais_key = traducciones_inv[indicador_seleccionado_pais]
+
+    fig, tabla = evolucion_pais(pais_seleccionado, indicador_seleccionado_pais_key)
     if fig:
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True) # Usar plotly_chart para interactividad
         st.dataframe(tabla)
 
-with tabs[2]:
+with tabs[2]: # Nueva pestaña insertada aquí
+    st.subheader("Comparativa de Variables por Año")
+    año_comparativa = st.selectbox("Selecciona un Año", años, key='año_comparativa')
+    variable_comparativa = st.selectbox("Selecciona una Variable", variables_traducidas, key='var_comparativa')
+    variable_comparativa_key = traducciones_inv[variable_comparativa]
+
+    if año_comparativa != "Todos los años":
+        df_anual = df[df['reporting_year'] == int(año_comparativa)].copy() # Usar .copy() para evitar SettingWithCopyWarning
+        
+        # Lógica para seleccionar el reporting_level más frecuente por país para ese año
+        df_filtrado_final = pd.DataFrame()
+        for country in df_anual['country_name'].unique():
+            df_country = df_anual[df_anual['country_name'] == country]
+            if not df_country.empty:
+                # Encuentra el reporting_level que más se repite para este país en este año
+                most_freq_level = df_country['reporting_level'].mode()
+                if not most_freq_level.empty:
+                    df_seleccionado = df_country[df_country['reporting_level'] == most_freq_level[0]]
+                    # Si hay múltiples entradas para el mismo país/año/reporting_level, toma la primera o promedia si es necesario
+                    # Para este caso, si hay duplicados con el mismo reporting_level, solo tomamos el primero
+                    if not df_seleccionado.empty:
+                        df_filtrado_final = pd.concat([df_filtrado_final, df_seleccionado.iloc[[0]]])
+
+        if not df_filtrado_final.empty:
+            st.write(f"Mostrando datos para el año **{año_comparativa}** y la variable **{variable_comparativa}**.")
+            st.write("Solo se considera el valor correspondiente al 'reporting_level' más frecuente por país.")
+            fig_comparativa = graficar_comparativa_anual(df_filtrado_final, variable_comparativa_key,
+                                                         f'{variable_comparativa} por País en el año {año_comparativa}')
+            st.plotly_chart(fig_comparativa, use_container_width=True)
+        else:
+            st.warning(f"No hay datos para mostrar para el año {año_comparativa} y la variable {variable_comparativa_key} con la lógica de nivel de reporte.")
+    else:
+        st.info("Por favor, selecciona un año específico para ver la comparativa anual.")
+
+
+with tabs[3]: # Las pestañas originales se desplazan
     st.subheader("Relación entre variables")
     sub_tabs = st.tabs(["Gráfica de dispersión", "Matriz de correlación"])
 
     with sub_tabs[0]:
         relacion_trad = st.selectbox("Relación", list(etiquetas_parejas.keys()))
         x_var, y_var = etiquetas_parejas[relacion_trad]
-        st.pyplot(graficar_relacion_variables_seleccion(x_var, y_var))
+        st.plotly_chart(graficar_relacion_variables_seleccion(x_var, y_var), use_container_width=True) # Usar plotly_chart
         st.markdown(f"**Explicación:** {explicaciones_parejas.get(relacion_trad, '')}")
 
     with sub_tabs[1]:
         st.markdown("### Matriz de correlación")
-        corr_vars = df_national[variables].dropna()
-        corr_matrix = corr_vars.corr()
-        fig, ax = plt.subplots(figsize=(8, 4))
-        sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm',
-                    xticklabels=[traducciones[v] for v in corr_matrix.columns],
-                    yticklabels=[traducciones[v] for v in corr_matrix.index],
-                    ax=ax)
-        st.pyplot(fig)
+        # Asegurarse de que las variables para la matriz de correlación sean solo las numéricas relevantes
+        # Aquí se usa 'variables' que ya filtra por las que tienen traducción
+        corr_vars_df = df_national[variables].dropna()
+        
+        if not corr_vars_df.empty:
+            corr_matrix = corr_vars_df.corr()
+            fig_corr, ax_corr = plt.subplots(figsize=(10, 6)) # Aumentar tamaño para mejor legibilidad
+            sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm',
+                        xticklabels=[traducciones[v] for v in corr_matrix.columns],
+                        yticklabels=[traducciones[v] for v in corr_matrix.index],
+                        ax=ax_corr, cbar_kws={'label': 'Coeficiente de Correlación'})
+            plt.xticks(rotation=45, ha='right') # Rotar etiquetas x
+            plt.yticks(rotation=0) # Mantener etiquetas y horizontales
+            plt.title("Matriz de Correlación de Variables Nacionales")
+            st.pyplot(fig_corr)
+        else:
+            st.warning("No hay suficientes datos para generar la matriz de correlación.")
 
 
+with tabs[4]: # Y esta también
+    st.subheader("Mapa mundial por Indicador")
+    año_mapa = st.selectbox("Selecciona un Año", años, key='mapa_año')
+    indicador_mapa = st.selectbox("Selecciona un Indicador", variables_traducidas, key='mapa_indicador')
+    indicador_mapa_key = traducciones_inv[indicador_mapa]
 
+    df_mapa = df_national.copy()
+    if año_mapa != "Todos los años":
+        df_mapa = df_mapa[df_mapa['reporting_year'] == int(año_mapa)]
 
-with tabs[3]:
-    st.subheader("Mapa mundial por variable")
-    col1, col2 = st.columns(2)
-    variable_trad = col1.selectbox("Variable para mapa", variables_traducidas)
-    año_map = col2.selectbox("Año", sorted(df['reporting_year'].dropna().unique().astype(int)))
-    variable = traducciones_inv[variable_trad]
-    st.plotly_chart(crear_mapa_mundial(variable, año_map), use_container_width=True)
+    if df_mapa.empty:
+        st.warning(f"No hay datos para mostrar el mapa con el año '{año_mapa}' y el indicador '{indicador_mapa}'.")
+    else:
+        # Intenta mapear nombres de países a códigos ISO 3 para Plotly
+        df_mapa['iso_alpha'] = df_mapa['country_name'].apply(lambda x: pycountry.countries.get(name=x).alpha_3 if pycountry.countries.get(name=x) else None)
+        df_mapa_filtered = df_mapa.dropna(subset=['iso_alpha', indicador_mapa])
+
+        if not df_mapa_filtered.empty:
+            fig_mapa = px.choropleth(df_mapa_filtered,
+                                     locations="iso_alpha",
+                                     color=indicador_mapa_key,
+                                     hover_name="country_name",
+                                     projection="natural earth",
+                                     title=f'{indicador_mapa} Mundial en {año_mapa}',
+                                     color_continuous_scale=px.colors.sequential.Plasma)
+            st.plotly_chart(fig_mapa, use_container_width=True)
+        else:
+            st.warning(f"No hay datos suficientes con códigos de país válidos para generar el mapa para el año '{año_mapa}' y el indicador '{indicador_mapa}'.")
