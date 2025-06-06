@@ -104,7 +104,7 @@ def resumen_visual(año, variable):
     )
 
     return fig_treemap, fig_bar
-
+r
 
 # --- Gráficos interactivos con Plotly ---
 def plot_box_hist_violin(df_base, variable, tipo):
