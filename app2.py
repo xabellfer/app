@@ -60,9 +60,6 @@ explicaciones_parejas = {
 
 # --- NUEVA PESTAÑA: RESUMEN VISUAL GLOBAL ---
 ... # todo el código igual hasta dentro de la función resumen_visual()
-
-... # todo el código igual hasta dentro de la función resumen_visual()
-
 def resumen_visual(año, variable):
     df_filtrado = df[df['reporting_year'] == año].copy()
 
@@ -99,8 +96,8 @@ def resumen_visual(año, variable):
     )
     fig_treemap.update_layout(title=f"Relación {traducciones.get(variable, variable)} / Desigualdad")
 
-    # --- Barplot por país ---
-    df_var_sorted = df_var.sort_values(by=variable, ascending=False)
+    # --- Barplot: solo los 15 países con valores más altos ---
+    df_var_sorted = df_var.sort_values(by=variable, ascending=False).head(15)
     fig_bar = px.bar(
         df_var_sorted,
         x=variable,
@@ -111,11 +108,12 @@ def resumen_visual(año, variable):
         labels={"country_name": "País", variable: traducciones.get(variable, variable)},
     )
     fig_bar.update_layout(
-        title="Comparación de pobreza entre países",
+        title="Top 15 países por nivel de pobreza",
         yaxis=dict(autorange="reversed")
     )
 
     return fig_treemap, fig_bar
+
 
 
 
