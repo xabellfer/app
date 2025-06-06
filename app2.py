@@ -4,6 +4,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 
+st.set_page_config(layout="wide", page_title="Análisis de Pobreza Global")
+
 # --- Cargar y preparar datos ---
 df = pd.read_csv("pip (4).csv")
 df_national = df[df['reporting_level'] == 'national']
