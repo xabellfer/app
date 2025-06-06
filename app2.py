@@ -59,6 +59,8 @@ explicaciones_parejas = {
 # --- NUEVA PESTAÑA: RESUMEN VISUAL GLOBAL ---
 ... # todo el código igual hasta dentro de la función resumen_visual()
 
+... # todo el código igual hasta dentro de la función resumen_visual()
+
 def resumen_visual(año, variable):
     df_filtrado = df[df['reporting_year'] == año].copy()
 
@@ -104,7 +106,8 @@ def resumen_visual(año, variable):
     )
 
     return fig_treemap, fig_bar
-r
+
+
 
 # --- Gráficos interactivos con Plotly ---
 def plot_box_hist_violin(df_base, variable, tipo):
