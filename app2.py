@@ -7,7 +7,7 @@ import pycountry
 
 # --- Cargar y preparar datos ---
 df = pd.read_csv("pip (4).csv")
-df_national = df[df['reporting_level'] == 'national']
+# df_national = df[df['reporting_level'] == 'national'] # Mantendremos el df completo y filtraremos según la lógica requerida
 
 # --- Diccionarios y listas ---
 traducciones = {
@@ -20,15 +20,14 @@ traducciones = {
     'mld': 'Desviación Logarítmica Media',
     'gini': 'Índice de Gini',
     'reporting_gdp': 'PIB per cápita'
-
 }
 traducciones_inv = {v: k for k, v in traducciones.items()}
 años = [str(año) for año in sorted(df['reporting_year'].dropna().unique().astype(int))] # Convertir a string para el selectbox
 años.insert(0, "Todos los años") # Añadir "Todos los años" al principio
 variables = [v for v in traducciones if v in df.columns]
 variables_traducidas = [traducciones[v] for v in variables]
-regiones = sorted(df['region_name'].unique())
-paises = sorted(df['country_name'].unique())
+regiones = sorted(df['region_name'].dropna().unique()) # Añadir dropna() por si hay nulos
+paises = sorted(df['country_name'].dropna().unique()) # Añadir dropna()
 indicadores = [v for v in ['headcount', 'poverty_gap', 'poverty_severity', 'watts',
                            'mean', 'median', 'mld', 'gini', 'reporting_gdp'] if v in df.columns] # Asegurarse de que estén en df.columns
 
@@ -49,7 +48,8 @@ explicaciones_parejas = {
 
 # --- Funciones de graficado ---
 def graficar_region(region, indicador):
-    df_filtered = df_national[(df_national['region_name'] == region) & (df_national['reporting_level'] == 'national')]
+    # Aquí se mantiene el filtro por 'national' ya que es para evolución de región
+    df_filtered = df[(df['region_name'] == region) & (df['reporting_level'] == 'national')]
     if df_filtered.empty:
         st.warning(f"No hay datos para la región '{region}' y el indicador '{traducciones.get(indicador, indicador)}' a nivel nacional.")
         return None
@@ -64,21 +64,28 @@ def graficar_region(region, indicador):
     return fig
 
 def evolucion_pais(pais, indicador):
-    df_pais = df_national[df_national['country_name'] == pais]
+    df_pais = df[df['country_name'] == pais].copy()
     if df_pais.empty:
         st.warning(f"No hay datos para el país '{pais}'.")
         return None, None
 
-    # Filtrar por el reporting_level más frecuente para el país
-    # Agrupar por año y reporting_level, contar las ocurrencias, luego encontrar el más frecuente por país
-    # Esto es una simplificación; en un caso real se necesitaría una lógica más robusta si el reporting_level varía mucho
+    # Filtrar por el reporting_level más frecuente para ese país
+    # Nota: si el reporting_level más frecuente varía mucho por año para un mismo país, esto simplifica.
+    # Se toma el reporting_level globalmente más frecuente para ese país en todo el dataset.
     
-    # Encontrar el reporting_level más frecuente en general para ese país
-    most_freq_level = df_pais['reporting_level'].mode()[0]
-    df_pais_filtered = df_pais[df_pais['reporting_level'] == most_freq_level]
+    # Primero, asegúrate de que 'reporting_level' esté presente y no sea nulo antes de calcular la moda
+    if 'reporting_level' in df_pais.columns and not df_pais['reporting_level'].dropna().empty:
+        most_freq_level_for_country = df_pais['reporting_level'].mode()[0]
+        df_pais_filtered = df_pais[df_pais['reporting_level'] == most_freq_level_for_country]
+    else:
+        # Si no hay 'reporting_level' o es todo nulo, intenta usar 'national' si existe o simplemente el df_pais
+        if 'reporting_level' in df_pais.columns and 'national' in df_pais['reporting_level'].unique():
+            df_pais_filtered = df_pais[df_pais['reporting_level'] == 'national']
+        else:
+            df_pais_filtered = df_pais # Si no hay 'reporting_level' o un 'national', usa todos los datos del país
 
     if df_pais_filtered.empty:
-        st.warning(f"No hay datos para el país '{pais}' con el nivel de reporte más frecuente '{most_freq_level}'.")
+        st.warning(f"No hay datos suficientes para el país '{pais}' con el nivel de reporte más frecuente.")
         return None, None
 
     fig = px.line(df_pais_filtered,
@@ -90,7 +97,8 @@ def evolucion_pais(pais, indicador):
     return fig, df_pais_filtered[['reporting_year', indicador]].set_index('reporting_year')
 
 def graficar_relacion_variables_seleccion(x_var, y_var):
-    df_plot = df_national.dropna(subset=[x_var, y_var])
+    # Aquí se usa 'national' como un nivel de reporte base para la relación entre variables
+    df_plot = df[df['reporting_level'] == 'national'].dropna(subset=[x_var, y_var])
     fig = px.scatter(df_plot,
                      x=x_var,
                      y=y_var,
@@ -117,6 +125,7 @@ def graficar_comparativa_anual(df_data, variable_seleccionada, titulo):
 st.set_page_config(layout="wide", page_title="Análisis de Pobreza e Ingresos")
 st.title("Análisis de Pobreza e Ingresos Globales")
 
+# Definir las pestañas, insertando la nueva en la posición correcta
 tabs = st.tabs(["Información General", "Evolución por País", "Comparativa por Año y Variable", "Relación entre variables", "Mapa mundial por indicador"])
 
 with tabs[0]:
@@ -125,8 +134,9 @@ with tabs[0]:
     st.write(f"Número total de registros: {len(df)}")
     st.write(f"Columnas disponibles: {', '.join(df.columns.tolist())}")
 
-    st.subheader("Primeras filas del dataset (nivel nacional)")
-    st.dataframe(df_national.head())
+    st.subheader("Primeras filas del dataset (con reporting_level)")
+    # Muestra el df completo para que se vea el reporting_level
+    st.dataframe(df.head())
 
 with tabs[1]:
     st.subheader("Evolución de Indicadores por País")
@@ -137,58 +147,76 @@ with tabs[1]:
     fig, tabla = evolucion_pais(pais_seleccionado, indicador_seleccionado_pais_key)
     if fig:
         st.plotly_chart(fig, use_container_width=True) # Usar plotly_chart para interactividad
-        st.dataframe(tabla)
+        if tabla is not None:
+            st.dataframe(tabla)
 
-with tabs[2]: # Nueva pestaña insertada aquí
+with tabs[2]: # ¡Esta es la nueva pestaña!
     st.subheader("Comparativa de Variables por Año")
-    año_comparativa = st.selectbox("Selecciona un Año", años, key='año_comparativa')
-    variable_comparativa = st.selectbox("Selecciona una Variable", variables_traducidas, key='var_comparativa')
+    año_comparativa = st.selectbox("Selecciona un Año", años, key='año_comparativa_selector')
+    variable_comparativa = st.selectbox("Selecciona una Variable", variables_traducidas, key='var_comparativa_selector')
     variable_comparativa_key = traducciones_inv[variable_comparativa]
 
     if año_comparativa != "Todos los años":
-        df_anual = df[df['reporting_year'] == int(año_comparativa)].copy() # Usar .copy() para evitar SettingWithCopyWarning
-        
-        # Lógica para seleccionar el reporting_level más frecuente por país para ese año
+        df_anual = df[df['reporting_year'] == int(año_comparativa)].copy()
+
+        # Lógica para seleccionar el valor por país basado en el reporting_level más frecuente
         df_filtrado_final = pd.DataFrame()
         for country in df_anual['country_name'].unique():
-            df_country = df_anual[df_anual['country_name'] == country]
-            if not df_country.empty:
-                # Encuentra el reporting_level que más se repite para este país en este año
-                most_freq_level = df_country['reporting_level'].mode()
-                if not most_freq_level.empty:
-                    df_seleccionado = df_country[df_country['reporting_level'] == most_freq_level[0]]
-                    # Si hay múltiples entradas para el mismo país/año/reporting_level, toma la primera o promedia si es necesario
-                    # Para este caso, si hay duplicados con el mismo reporting_level, solo tomamos el primero
+            df_country_year = df_anual[df_anual['country_name'] == country].copy()
+            if not df_country_year.empty:
+                # Calcular la frecuencia de cada reporting_level para este país en este año
+                reporting_level_counts = df_country_year['reporting_level'].value_counts()
+                if not reporting_level_counts.empty:
+                    most_freq_level = reporting_level_counts.idxmax() # Obtiene el nivel más frecuente
+                    
+                    # Filtra por el nivel más frecuente
+                    df_seleccionado = df_country_year[df_country_year['reporting_level'] == most_freq_level]
+                    
+                    # Si hay múltiples entradas para el mismo país/año/reporting_level (duplicados de datos),
+                    # tomamos el promedio o una fila representativa. Aquí tomamos el promedio para la variable.
+                    # Esto es importante para asegurar un único punto por país en el scatter plot.
                     if not df_seleccionado.empty:
-                        df_filtrado_final = pd.concat([df_filtrado_final, df_seleccionado.iloc[[0]]])
+                        # Si la variable es numérica, promediar. Si no, tomar la primera.
+                        # Para este caso, asumimos que 'variable_comparativa_key' es numérica.
+                        # Si no es numérica, se debería definir cómo se agrega.
+                        row_to_add = {
+                            'country_name': country,
+                            'region_name': df_seleccionado['region_name'].iloc[0], # Tomar la primera región
+                            variable_comparativa_key: df_seleccionado[variable_comparativa_key].mean() # Promediar el valor
+                        }
+                        # Añadir otras columnas necesarias si se usan en el gráfico (ej. reporting_year, que ya está filtrado)
+                        df_filtrado_final = pd.concat([df_filtrado_final, pd.DataFrame([row_to_add])], ignore_index=True)
+                else:
+                    # Si no hay reporting_level para este país en este año, se podría optar por omitirlo o tomar otra decisión
+                    pass # Actualmente se omite
 
         if not df_filtrado_final.empty:
             st.write(f"Mostrando datos para el año **{año_comparativa}** y la variable **{variable_comparativa}**.")
-            st.write("Solo se considera el valor correspondiente al 'reporting_level' más frecuente por país.")
+            st.write("Solo se considera el valor correspondiente al 'reporting_level' más frecuente por país para ese año. Si hay múltiples valores para ese nivel, se promedian.")
             fig_comparativa = graficar_comparativa_anual(df_filtrado_final, variable_comparativa_key,
                                                          f'{variable_comparativa} por País en el año {año_comparativa}')
             st.plotly_chart(fig_comparativa, use_container_width=True)
         else:
-            st.warning(f"No hay datos para mostrar para el año {año_comparativa} y la variable {variable_comparativa_key} con la lógica de nivel de reporte.")
+            st.warning(f"No hay datos para mostrar para el año {año_comparativa} y la variable {variable_comparativa} con la lógica de nivel de reporte.")
     else:
         st.info("Por favor, selecciona un año específico para ver la comparativa anual.")
 
 
-with tabs[3]: # Las pestañas originales se desplazan
+with tabs[3]: # Las pestañas originales se han desplazado
     st.subheader("Relación entre variables")
     sub_tabs = st.tabs(["Gráfica de dispersión", "Matriz de correlación"])
 
     with sub_tabs[0]:
         relacion_trad = st.selectbox("Relación", list(etiquetas_parejas.keys()))
         x_var, y_var = etiquetas_parejas[relacion_trad]
-        st.plotly_chart(graficar_relacion_variables_seleccion(x_var, y_var), use_container_width=True) # Usar plotly_chart
+        st.plotly_chart(graficar_relacion_variables_seleccion(x_var, y_var), use_container_width=True)
         st.markdown(f"**Explicación:** {explicaciones_parejas.get(relacion_trad, '')}")
 
     with sub_tabs[1]:
         st.markdown("### Matriz de correlación")
         # Asegurarse de que las variables para la matriz de correlación sean solo las numéricas relevantes
-        # Aquí se usa 'variables' que ya filtra por las que tienen traducción
-        corr_vars_df = df_national[variables].dropna()
+        # Aquí se usa 'variables' que ya filtra por las que tienen traducción. Se filtra por reporting_level = 'national'
+        corr_vars_df = df[df['reporting_level'] == 'national'][variables].dropna()
         
         if not corr_vars_df.empty:
             corr_matrix = corr_vars_df.corr()
@@ -197,12 +225,12 @@ with tabs[3]: # Las pestañas originales se desplazan
                         xticklabels=[traducciones[v] for v in corr_matrix.columns],
                         yticklabels=[traducciones[v] for v in corr_matrix.index],
                         ax=ax_corr, cbar_kws={'label': 'Coeficiente de Correlación'})
-            plt.xticks(rotation=45, ha='right') # Rotar etiquetas x
-            plt.yticks(rotation=0) # Mantener etiquetas y horizontales
+            plt.xticks(rotation=45, ha='right')
+            plt.yticks(rotation=0)
             plt.title("Matriz de Correlación de Variables Nacionales")
             st.pyplot(fig_corr)
         else:
-            st.warning("No hay suficientes datos para generar la matriz de correlación.")
+            st.warning("No hay suficientes datos a nivel nacional para generar la matriz de correlación.")
 
 
 with tabs[4]: # Y esta también
@@ -211,7 +239,7 @@ with tabs[4]: # Y esta también
     indicador_mapa = st.selectbox("Selecciona un Indicador", variables_traducidas, key='mapa_indicador')
     indicador_mapa_key = traducciones_inv[indicador_mapa]
 
-    df_mapa = df_national.copy()
+    df_mapa = df[df['reporting_level'] == 'national'].copy() # Solo usar datos nacionales para el mapa por simplicidad
     if año_mapa != "Todos los años":
         df_mapa = df_mapa[df_mapa['reporting_year'] == int(año_mapa)]
 
@@ -220,7 +248,7 @@ with tabs[4]: # Y esta también
     else:
         # Intenta mapear nombres de países a códigos ISO 3 para Plotly
         df_mapa['iso_alpha'] = df_mapa['country_name'].apply(lambda x: pycountry.countries.get(name=x).alpha_3 if pycountry.countries.get(name=x) else None)
-        df_mapa_filtered = df_mapa.dropna(subset=['iso_alpha', indicador_mapa])
+        df_mapa_filtered = df_mapa.dropna(subset=['iso_alpha', indicador_mapa_key]) # Usar indicador_mapa_key
 
         if not df_mapa_filtered.empty:
             fig_mapa = px.choropleth(df_mapa_filtered,
