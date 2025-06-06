@@ -66,16 +66,24 @@ explicaciones_parejas = {
 def resumen_visual(año, variable):
     df_filtrado = df[df['reporting_year'] == año].copy()
 
-    # Seleccionar sólo el reporting_level dominante por país
-    df_filtrado['dominante'] = df_filtrado.groupby('country_name')['reporting_level'].transform(lambda x: x.mode()[0])
-    df_filtrado = df_filtrado[df_filtrado['reporting_level'] == df_filtrado['dominante']]
+    if df_filtrado.empty:
+        return go.Figure(), go.Figure()
 
+    # Obtener reporting_level dominante por país
+    modo_reporting = df_filtrado.groupby("country_name")["reporting_level"].agg(lambda x: x.mode()[0])
+    df_filtrado["dominante"] = df_filtrado["country_name"].map(modo_reporting)
+    df_filtrado = df_filtrado[df_filtrado["reporting_level"] == df_filtrado["dominante"]]
+
+    # Filtrar y limpiar
     df_var = df_filtrado[["country_name", "region_name", variable]].dropna()
-    df_var = df_var[df_var[variable] > 0]  # Filtrar solo valores mayores que cero
+    df_var = df_var[df_var[variable] > 0]
 
-    # Treemap por región
+    if df_var.empty:
+        return go.Figure(), go.Figure()
+
+    # --- Treemap por región ---
     df_region = df_var.groupby("region_name").agg({
-        variable: ['mean'],
+        variable: 'mean',
         'country_name': 'count'
     }).reset_index()
     df_region.columns = ["region_name", "valor_medio", "n_paises"]
@@ -86,12 +94,12 @@ def resumen_visual(año, variable):
         values="n_paises",
         color="valor_medio",
         color_continuous_scale="Tealgrn",
-        labels={"valor_medio": traducciones[variable]},
+        labels={"valor_medio": traducciones.get(variable, variable)},
         hover_data={"valor_medio": ':.4f'}
     )
-    fig_treemap.update_layout(title=f"Relación {traducciones[variable]}/Desigualdad")
+    fig_treemap.update_layout(title=f"Relación {traducciones.get(variable, variable)} / Desigualdad")
 
-    # Barplot por país (todos los países con valor > 0)
+    # --- Barplot por país ---
     df_var_sorted = df_var.sort_values(by=variable, ascending=False)
     fig_bar = px.bar(
         df_var_sorted,
@@ -100,7 +108,7 @@ def resumen_visual(año, variable):
         orientation="h",
         color=variable,
         color_continuous_scale="Blues",
-        labels={"country_name": "País", variable: traducciones[variable]},
+        labels={"country_name": "País", variable: traducciones.get(variable, variable)},
     )
     fig_bar.update_layout(
         title="Comparación de pobreza entre países",
@@ -108,6 +116,7 @@ def resumen_visual(año, variable):
     )
 
     return fig_treemap, fig_bar
+
 
 
 
