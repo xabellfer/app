@@ -227,7 +227,6 @@ with tabs[2]:
         hover_data={
             variable + '_mean': False,
             variable + '_max': True,
-            'country_name': True
         },
         color=variable + '_mean',
         color_continuous_scale='Viridis',
