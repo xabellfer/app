@@ -207,19 +207,29 @@ with tabs[2]:
     df_año['nivel_dominante'] = df_año['country_name'].map(niveles_pred)
     df_filtrado = df_año[df_año['reporting_level'] == df_año['nivel_dominante']]
 
+    # Filtrar valores válidos
     df_filtrado = df_filtrado[['country_name', 'region_name', variable]].dropna()
     df_filtrado = df_filtrado[df_filtrado[variable] > 0]
 
-    # Treemap por región
-    df_region = df_filtrado.groupby('region_name')[variable].mean().reset_index()
+    # Treemap: mostrar promedio y máximo por región
+    df_region = df_filtrado.groupby('region_name')[variable].agg(['mean', 'max']).reset_index()
+    df_region.columns = ['region_name', 'Promedio', 'Máximo']
+    df_region['custom_label'] = df_region.apply(
+        lambda row: f"{row['region_name']}<br>Promedio: {row['Promedio']:.2f}<br>Máximo país: {row['Máximo']:.2f}", axis=1
+    )
+
     fig_region = px.treemap(
-        df_region, path=['region_name'], values=variable,
-        color=variable, color_continuous_scale='Viridis',
-        title=f"Promedio regional de {variable_traducida} en {año_seleccionado}"
+        df_region,
+        path=['region_name'],
+        values='Promedio',
+        hover_data={'Promedio': True, 'Máximo': True},
+        color='Promedio',
+        color_continuous_scale='Viridis',
+        title=f"Promedio y máximo regional de {variable_traducida} en {año_seleccionado}"
     )
     st.plotly_chart(fig_region, use_container_width=True)
 
-    # Gráfico de barras por país
+    # Gráfico de barras por país (orden descendente)
     st.markdown("### Comparación entre países")
     df_ordenado = df_filtrado.sort_values(by=variable, ascending=False)
     fig_bar = px.bar(
@@ -232,6 +242,7 @@ with tabs[2]:
         height=600
     )
     st.plotly_chart(fig_bar, use_container_width=True)
+
 
 
 
