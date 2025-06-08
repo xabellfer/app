@@ -211,22 +211,29 @@ with tabs[2]:
     df_filtrado = df_filtrado[['country_name', 'region_name', variable]].dropna()
     df_filtrado = df_filtrado[df_filtrado[variable] > 0]
 
-    # Treemap: mostrar promedio y máximo por región
-    df_region = df_filtrado.groupby('region_name')[variable].agg(['mean', 'max']).reset_index()
-    df_region.columns = ['region_name', 'Promedio', 'Máximo']
+    # Treemap: promedio y máximo por región, con país incluido
+    df_max = df_filtrado.sort_values(variable, ascending=False).groupby('region_name').first().reset_index()
+    df_region = df_filtrado.groupby('region_name')[variable].mean().reset_index()
+    df_region = df_region.merge(df_max[['region_name', 'country_name', variable]], on='region_name', suffixes=('_mean', '_max'))
     df_region['custom_label'] = df_region.apply(
-        lambda row: f"{row['region_name']}<br>Promedio: {row['Promedio']:.2f}<br>Máximo país: {row['Máximo']:.2f}", axis=1
+        lambda row: f"{row['region_name']}<br>Promedio: {row[variable + '_mean']:.2f}<br>Máximo ({row['country_name']}): {row[variable + '_max']:.2f}",
+        axis=1
     )
 
     fig_region = px.treemap(
         df_region,
         path=['region_name'],
-        values='Promedio',
-        hover_data={'Promedio': True, 'Máximo': True},
-        color='Promedio',
+        values=variable + '_mean',
+        hover_data={
+            variable + '_mean': False,
+            variable + '_max': True,
+            'country_name': True
+        },
+        color=variable + '_mean',
         color_continuous_scale='Viridis',
-        title=f"Promedio y máximo regional de {variable_traducida} en {año_seleccionado}"
+        title=f"{variable_traducida} - Promedio y país destacado por región ({año_seleccionado})"
     )
+    fig_region.data[0].texttemplate = None  # Eliminar texto central ("promedio_sum")
     st.plotly_chart(fig_region, use_container_width=True)
 
     # Gráfico de barras por país (orden descendente)
@@ -234,14 +241,16 @@ with tabs[2]:
     df_ordenado = df_filtrado.sort_values(by=variable, ascending=False)
     fig_bar = px.bar(
         df_ordenado,
-        x=variable, y='country_name',
+        x=variable,
+        y='country_name',
         orientation='h',
-        color=variable,
-        color_continuous_scale='Blues',
-        labels={variable: variable_traducida, 'country_name': 'País'},
-        height=600
+        color='region_name',
+        labels={variable: variable_traducida, 'country_name': 'País', 'region_name': 'Región'},
+        height=700,
+        hover_data={'region_name': True}
     )
     st.plotly_chart(fig_bar, use_container_width=True)
+
 
 
 
