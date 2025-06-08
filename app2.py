@@ -144,7 +144,7 @@ def crear_mapa_mundial(variable, año):
 st.set_page_config(layout="wide", page_title="Análisis de Pobreza Global")
 st.title("🌍 Análisis de Pobreza Global")
 
-tabs = st.tabs(["📊 Gráficos por Año", "📈 Evolución por País", "🔗 Relaciones", "🗺️ Mapa Mundial"])
+tabs = st.tabs(["📊 Gráficos por Año", "📈 Evolución por País", "📌 Comparación por País", "🔗 Relaciones", "🗺️ Mapa Mundial"])
 
 with tabs[0]:
     st.subheader("Visualización por Año y Variable")
@@ -193,9 +193,52 @@ with tabs[2]:
         st.pyplot(fig)
 
 
-
-
 with tabs[3]:
+    st.subheader("Comparación entre países por variable y año")
+    col1, col2 = st.columns(2)
+    año_seleccionado = col1.selectbox("Año", sorted(df['reporting_year'].dropna().unique().astype(int)), key="año_comp")
+    variable_traducida = col2.selectbox("Variable", variables_traducidas, key="var_comp")
+    variable = traducciones_inv[variable_traducida]
+
+    # Para cada país, seleccionar el reporting_level más común
+    df_filtrado = df[df['reporting_year'] == año_seleccionado]
+    niveles_predominantes = df_filtrado.groupby("country_name")["reporting_level"].agg(lambda x: x.mode()[0])
+    df_filtrado['nivel_preferido'] = df_filtrado['country_name'].map(niveles_predominantes)
+    df_filtrado = df_filtrado[df_filtrado['reporting_level'] == df_filtrado['nivel_preferido']]
+    
+    # Filtrar países con valor válido (> 0)
+    df_final = df_filtrado[['country_name', 'region_name', variable]].dropna()
+    df_final = df_final[df_final[variable] > 0]
+
+    # --- Gráfico de regiones (tipo treemap) ---
+    promedio_region = df_final.groupby('region_name')[variable].mean().reset_index()
+    fig_region = px.treemap(
+        promedio_region,
+        path=['region_name'],
+        values=variable,
+        color=variable,
+        color_continuous_scale='Tealgrn',
+        title=f"Relación pobreza/desigualdad: Promedio regional de {variable_traducida}"
+    )
+    st.plotly_chart(fig_region, use_container_width=True)
+
+    # --- Gráfico de barras horizontales por país ---
+    st.markdown("### Comparación de pobreza entre países")
+    df_top = df_final.sort_values(by=variable, ascending=False)
+    fig_bar = px.bar(
+        df_top,
+        x=variable,
+        y='country_name',
+        orientation='h',
+        color=variable,
+        color_continuous_scale='Blues',
+        labels={variable: variable_traducida, 'country_name': 'País'},
+        height=600
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+
+with tabs[4]:
     st.subheader("Mapa mundial por variable")
     col1, col2 = st.columns(2)
     variable_trad = col1.selectbox("Variable para mapa", variables_traducidas)
