@@ -200,35 +200,31 @@ with tabs[3]:
     variable_traducida = col2.selectbox("Variable", variables_traducidas, key="var_comp")
     variable = traducciones_inv[variable_traducida]
 
-    # Para cada país, seleccionar el reporting_level más común
-    df_filtrado = df[df['reporting_year'] == año_seleccionado]
-    niveles_predominantes = df_filtrado.groupby("country_name")["reporting_level"].agg(lambda x: x.mode()[0])
-    df_filtrado['nivel_preferido'] = df_filtrado['country_name'].map(niveles_predominantes)
-    df_filtrado = df_filtrado[df_filtrado['reporting_level'] == df_filtrado['nivel_preferido']]
-    
-    # Filtrar países con valor válido (> 0)
-    df_final = df_filtrado[['country_name', 'region_name', variable]].dropna()
-    df_final = df_final[df_final[variable] > 0]
+    df_año = df[df['reporting_year'] == año_seleccionado].copy()
 
-    # --- Gráfico de regiones (tipo treemap) ---
-    promedio_region = df_final.groupby('region_name')[variable].mean().reset_index()
+    # Obtener reporting_level más común por país
+    niveles_pred = df_año.groupby('country_name')['reporting_level'].agg(lambda x: x.mode()[0])
+    df_año['nivel_dominante'] = df_año['country_name'].map(niveles_pred)
+    df_filtrado = df_año[df_año['reporting_level'] == df_año['nivel_dominante']]
+
+    df_filtrado = df_filtrado[['country_name', 'region_name', variable]].dropna()
+    df_filtrado = df_filtrado[df_filtrado[variable] > 0]
+
+    # Treemap por región
+    df_region = df_filtrado.groupby('region_name')[variable].mean().reset_index()
     fig_region = px.treemap(
-        promedio_region,
-        path=['region_name'],
-        values=variable,
-        color=variable,
-        color_continuous_scale='Tealgrn',
-        title=f"Relación pobreza/desigualdad: Promedio regional de {variable_traducida}"
+        df_region, path=['region_name'], values=variable,
+        color=variable, color_continuous_scale='Viridis',
+        title=f"Promedio regional de {variable_traducida} en {año_seleccionado}"
     )
     st.plotly_chart(fig_region, use_container_width=True)
 
-    # --- Gráfico de barras horizontales por país ---
-    st.markdown("### Comparación de pobreza entre países")
-    df_top = df_final.sort_values(by=variable, ascending=False)
+    # Gráfico de barras por país
+    st.markdown("### Comparación entre países")
+    df_ordenado = df_filtrado.sort_values(by=variable, ascending=False)
     fig_bar = px.bar(
-        df_top,
-        x=variable,
-        y='country_name',
+        df_ordenado,
+        x=variable, y='country_name',
         orientation='h',
         color=variable,
         color_continuous_scale='Blues',
@@ -236,6 +232,7 @@ with tabs[3]:
         height=600
     )
     st.plotly_chart(fig_bar, use_container_width=True)
+
 
 
 with tabs[4]:
