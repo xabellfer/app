@@ -171,7 +171,7 @@ with tabs[1]:
         st.pyplot(fig)
         st.dataframe(tabla)
 
-with tabs[2]:
+with tabs[3]:
     st.subheader("Relación entre variables")
     sub_tabs = st.tabs(["Gráfica de dispersión", "Matriz de correlación"])
 
@@ -193,7 +193,7 @@ with tabs[2]:
         st.pyplot(fig)
 
 
-with tabs[3]:
+with tabs[2]:
     st.subheader("Comparación entre países por variable y año")
     col1, col2 = st.columns(2)
     año_seleccionado = col1.selectbox("Año", sorted(df['reporting_year'].dropna().unique().astype(int)), key="año_comp")
