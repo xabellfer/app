@@ -144,7 +144,7 @@ def crear_mapa_mundial(variable, año):
 st.set_page_config(layout="wide", page_title="Análisis de Pobreza Global")
 st.title("🌍 Análisis de Pobreza Global")
 
-tabs = st.tabs(["📊 Gráficos por Año", "📈 Evolución por País", "📌 Comparación por País", "🔗 Relaciones", "🗺️ Mapa Mundial"])
+tabs = st.tabs(["📊 Gráficos Variables", "📈 Evolución por País", "📌 Comparación por País", "🔗 Relaciones", "🗺️ Mapa Mundial"])
 
 with tabs[0]:
     st.subheader("Visualización por Año y Variable")
