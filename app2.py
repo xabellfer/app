@@ -250,6 +250,10 @@ with tabs[2]:
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
+    # --- Media mundial ---
+    media_mundial = df_filtrado[variable].mean()
+    st.markdown("---")
+    st.markdown(f"### 🌍 Media mundial de **{variable_traducida}** en {año_seleccionado}: **{media_mundial:.2f}**")
 
 
 
