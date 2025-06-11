@@ -253,7 +253,7 @@ with tabs[2]:
     # --- Media mundial ---
     media_mundial = df_filtrado[variable].mean()
     st.markdown("---")
-    st.markdown(f"### 🌍 Media mundial de **{variable_traducida}** en {año_seleccionado}: **{media_mundial:.4f}**")
+    st.markdown(f"### 🌍 Media mundial de **{variable_traducida}** en {año_seleccionado}: {media_mundial:.4f}")
 
 
 
