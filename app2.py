@@ -28,7 +28,7 @@ variables = [v for v in traducciones if v in df.columns]
 variables_traducidas = [traducciones[v] for v in variables]
 regiones = sorted(df['region_name'].unique())
 paises = sorted(df['country_name'].unique())
-indicadores = [v for v in ['headcount', 'poverty_gap', 'poverty_severity', 'watts', 'gini', 'mean'] if v in df.columns]
+indicadores = [v for v in ['headcount', 'poverty_gap', 'poverty_severity', 'watts', 'gini', 'mean', 'mld', 'median', 'reporting_gdp'] if v in df.columns]
 indicadores_traducidos = [traducciones[v] for v in indicadores]
 
 parejas_variables = [
