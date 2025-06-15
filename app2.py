@@ -6,7 +6,7 @@ import plotly.express as px
 import pycountry
 
 # --- Cargar y preparar datos ---
-df = pd.read_csv("pip (4).csv")
+df = pd.read_csv("datos_pobreza_filtrados.csv")
 df_national = df[df['reporting_level'] == 'national']
 
 # --- Diccionarios y listas ---
