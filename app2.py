@@ -182,7 +182,7 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("Evolución temporal por país")
     pais = st.selectbox("País", paises)
-    indicador_trad = st.selectbox("Indicador", indicadores_traducidos)
+    indicador_trad = st.selectbox("Indicador", variables_traducidas)
     indicador = traducciones_inv[indicador_trad]
     fig, tabla = evolucion_pais(pais, indicador)
     if fig:
