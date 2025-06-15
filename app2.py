@@ -65,7 +65,7 @@ explicaciones_parejas = {
 }
 
 explicaciones_variables = {
-    'headcount': "La tasa de pobreza (headcount) indica el porcentaje de la población que vive por debajo de la línea de pobreza. Es una medida directa del alcance de la pobreza en una sociedad.",
+    'Tasa de pobreza (headcount)': "La tasa de pobreza (headcount) indica el porcentaje de la población que vive por debajo de la línea de pobreza. Es una medida directa del alcance de la pobreza en una sociedad.",
     'poverty_gap': "La brecha de pobreza mide la distancia promedio entre los ingresos de los pobres y la línea de pobreza. Refleja la intensidad o profundidad de la pobreza.",
     'poverty_severity': "La severidad de la pobreza da más peso a los más pobres entre los pobres. Considera tanto la brecha como la desigualdad entre los pobres.",
     'watts': "El índice de Watts es una medida de pobreza que combina información sobre incidencia, brecha y desigualdad entre los pobres, en una única métrica.",
