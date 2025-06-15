@@ -65,15 +65,15 @@ explicaciones_parejas = {
 }
 
 explicaciones_variables = {
-    'headcount': "La tasa de pobreza (headcount) indica el porcentaje de la población que vive por debajo de la línea de pobreza. Es una medida directa del alcance de la pobreza en una sociedad.",
-    'poverty_gap': "La brecha de pobreza mide la distancia promedio entre los ingresos de los pobres y la línea de pobreza. Refleja la intensidad o profundidad de la pobreza.",
-    'poverty_severity': "La severidad de la pobreza da más peso a los más pobres entre los pobres. Considera tanto la brecha como la desigualdad entre los pobres.",
-    'watts': "El índice de Watts es una medida de pobreza que combina información sobre incidencia, brecha y desigualdad entre los pobres, en una única métrica.",
-    'mean': "El ingreso promedio proporciona una visión general del nivel de riqueza o ingreso per cápita en un país o región.",
-    'median': "El ingreso mediano refleja el ingreso central de la población. Es menos sensible a extremos que el promedio y muestra mejor el ingreso 'típico'.",
-    'mld': "La desviación logarítmica media (MLD) es una medida de desigualdad que da más peso a las diferencias en los ingresos bajos.",
-    'gini': "El índice de Gini mide la desigualdad en la distribución del ingreso. Un valor más alto indica mayor desigualdad.",
-    'reporting_gdp': "El PIB per cápita es una medida estándar del nivel económico promedio de una población. No refleja distribución ni pobreza, pero sí desarrollo económico general."
+    'headcount': "La tasa de pobreza (headcount) indica el porcentaje de la población que vive por debajo de la línea de pobreza. Como se puede ver en los gráficos, esta variable presenta una clara asimetría positiva, acumulándose la mayoría de los casos en los valores más bajos.",
+    'poverty_gap': "La brecha de pobreza (%) mide la distancia promedio entre los ingresos de los pobres y la línea de pobreza. Representa cuánto, en promedio, necesitarían los pobres para superar la pobreza. Como se puede ver en los gráficos, esta variable presenta una clara asimetría positiva, acumulándose la mayoría de los casos en los valores más bajos.",
+    'poverty_severity': "La severidad de la pobreza (%) considera tanto la brecha como la desigualdad entre los pobres. Como se puede ver en los gráficos, esta variable presenta una clara asimetría positiva, acumulándose la mayoría de los casos en los valores más bajos.",
+    'watts': "El índice de Watts (%) es un índice que mide la pobreza combinando brecha de pobreza y severidad de manera logarítmica. Como se puede ver en los gráficos, esta variable presenta una clara asimetría positiva, acumulándose la mayoría de los casos en los valores más bajos.",
+    'mean': "El ingreso promedio es el ingreso medio de la población, calculado como el promedio de los ingresos individuales diarios en dólares. Como se puede ver en los gráficos, esta variable presenta una ligera asimetría positiva, aunque si que se aproxima a una distribución normal.",
+    'median': "El ingreso mediano refleja el ingreso que divide a la población en dos partes iguales (la mitad gana más y la otra mitad gana menos). También está medido en dólares. Como se puede ver en los gráficos, esta variable presenta una ligera asimetría positiva, aunque si que se aproxima a una distribución normal.",
+    'mld': "La desviación logarítmica media (MLD) es una medida de desigualdad que mide la dispersión logarítmica de los ingresos con respecto a la media. Como se puede ver en los gráficos, esta variable presenta una clara asimetría positiva, acumulándose la mayoría de los casos en los valores más bajos.",
+    'gini': "El índice de Gini mide la desigualdad en la distribución del ingreso. Su valor oscila entre 0 (igualdad perfecta) y 1 (desigualdad total). Como se puede ver en los gráficos, esta variable presenta una ligera asimetría positiva, aunque si que se aproxima a una distribución normal.",
+    'reporting_gdp': "El PIB per cápita es una medida estándar del nivel económico promedio de una población. Útil para contextualizar los niveles de pobreza en función del desarrollo económico. Medido en dólares. Como se puede ver en los gráficos, esta variable presenta una clara asimetría positiva, acumulándose la mayoría de los casos en los valores más bajos."
 }
 
 # --- Funciones para gráficas ---
