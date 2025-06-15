@@ -64,6 +64,17 @@ explicaciones_parejas = {
 
 }
 
+explicaciones_variables = {
+    'headcount': "La tasa de pobreza (headcount) indica el porcentaje de la población que vive por debajo de la línea de pobreza. Es una medida directa del alcance de la pobreza en una sociedad.",
+    'poverty_gap': "La brecha de pobreza mide la distancia promedio entre los ingresos de los pobres y la línea de pobreza. Refleja la intensidad o profundidad de la pobreza.",
+    'poverty_severity': "La severidad de la pobreza da más peso a los más pobres entre los pobres. Considera tanto la brecha como la desigualdad entre los pobres.",
+    'watts': "El índice de Watts es una medida de pobreza que combina información sobre incidencia, brecha y desigualdad entre los pobres, en una única métrica.",
+    'mean': "El ingreso promedio proporciona una visión general del nivel de riqueza o ingreso per cápita en un país o región.",
+    'median': "El ingreso mediano refleja el ingreso central de la población. Es menos sensible a extremos que el promedio y muestra mejor el ingreso 'típico'.",
+    'mld': "La desviación logarítmica media (MLD) es una medida de desigualdad que da más peso a las diferencias en los ingresos bajos.",
+    'gini': "El índice de Gini mide la desigualdad en la distribución del ingreso. Un valor más alto indica mayor desigualdad.",
+    'reporting_gdp': "El PIB per cápita es una medida estándar del nivel económico promedio de una población. No refleja distribución ni pobreza, pero sí desarrollo económico general."
+}
 
 # --- Funciones para gráficas ---
 def violin_plot(df_base, variable, variable_trad):
@@ -160,6 +171,13 @@ with tabs[0]:
         st.pyplot(histograma(df_base, variable, variable_trad))
     else:
         st.pyplot(violin_plot(df_base, variable, variable_trad))
+    # Mostrar explicación solo si se seleccionó "Todos los años"
+    if año == "Todos los años":
+        explicacion = explicaciones_variables.get(variable)
+        if explicacion:
+            st.markdown(f"#### ℹ️ Explicación de la variable seleccionada")
+            st.markdown(f"{explicacion}")
+
 
 with tabs[1]:
     st.subheader("Evolución temporal por país")
